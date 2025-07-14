@@ -391,21 +391,23 @@
             <strong>Note :</strong> Les voyelles courtes (diacritiques) sont affichées pour faciliter la lecture et la prononciation. L'audio utilise la synthèse vocale de votre navigateur.
         </div>
     </div>
+
+    <!-- Élément audio unique pour jouer les sons -->
+    <audio id="audio-player" preload="auto"></audio>
+
     <script>
         const app = {
             state: {
                 days: [
-                    { ar: 'الأَحَدُ', fr: 'Dimanche' },
-                    { ar: 'الإِثْنَيْنِ', fr: 'Lundi' },
-                    { ar: 'الثُّلاثاءُ', fr: 'Mardi' },
-                    { ar: 'الأَرْبِعاءُ', fr: 'Mercredi' },
-                    { ar: 'الخَمِيسُ', fr: 'Jeudi' },
-                    { ar: 'الجُمُعَةُ', fr: 'Vendredi' },
-                    { ar: 'السَّبْتُ', fr: 'Samedi' }
+                    // IMPORTANT: Assurez-vous que ces fichiers mp3 existent dans un dossier "sounds"
+                    { ar: 'الأَحَدُ', fr: 'Dimanche', sound: 'sounds/dimanche.mp3' },
+                    { ar: 'الإِثْنَيْنِ', fr: 'Lundi', sound: 'sounds/lundi.mp3' },
+                    { ar: 'الثُّلاثاءُ', fr: 'Mardi', sound: 'sounds/mardi.mp3' },
+                    { ar: 'الأَرْبِعاءُ', fr: 'Mercredi', sound: 'sounds/mercredi.mp3' },
+                    { ar: 'الخَمِيسُ', fr: 'Jeudi', sound: 'sounds/jeudi.mp3' },
+                    { ar: 'الجُمُعَةُ', fr: 'Vendredi', sound: 'sounds/vendredi.mp3' },
+                    { ar: 'السَّبْتُ', fr: 'Samedi', sound: 'sounds/samedi.mp3' }
                 ],
-                audioEnabled: false,
-                speechSynthesis: null,
-                arabicVoice: null,
                 quiz: { currentIndex: 0, score: 0 },
                 memory: { cards: [], flippedCards: [], score: 0, lockBoard: false },
                 matching: { selectedArabic: null, selectedFrench: null, score: 0 }
@@ -417,7 +419,6 @@
                 this.cacheElements();
                 this.bindEvents();
                 this.renderLessonDays();
-                this.initializeSpeech();
             },
 
             cacheElements() {
@@ -425,6 +426,7 @@
                 this.elements.contents = document.querySelectorAll('.content');
                 this.elements.audioStatus = document.getElementById('audio-status');
                 this.elements.lessonDaysContainer = document.getElementById('lesson-days-container');
+                this.elements.audioPlayer = document.getElementById('audio-player');
                 this.elements.quizContainer = document.getElementById('quiz-container');
                 this.elements.memoryScore = document.getElementById('memory-score');
                 this.elements.memoryGame = document.getElementById('memory-game');
@@ -440,7 +442,11 @@
 
                 document.body.addEventListener('click', (e) => {
                     const action = e.target.dataset.action;
-                    if (action && typeof this[action] === 'function') {
+                    // Le bouton "enable-audio" change simplement le message
+                    if (action === 'enable-audio') {
+                        this.elements.audioStatus.className = 'audio-status enabled';
+                        this.elements.audioStatus.innerHTML = '✅ Audio activé !';
+                    } else if (action && typeof this[action] === 'function') {
                         e.preventDefault();
                         this[action]();
                     }
@@ -449,71 +455,28 @@
                 this.elements.lessonDaysContainer.addEventListener('click', (e) => {
                     const dayElement = e.target.closest('.jour');
                     if (dayElement) {
-                        const arabicText = dayElement.dataset.ar;
+                        // Trouver l'index de l'élément cliqué pour obtenir le bon fichier son
+                        const dayIndex = Array.from(this.elements.lessonDaysContainer.children).indexOf(dayElement);
+                        const soundFile = this.state.days[dayIndex].sound;
                         const button = dayElement.querySelector('.audio-btn');
-                        this.playAudio(arabicText, button);
+                        this.playAudio(soundFile, button);
                     }
                 });
             },
 
-            initializeSpeech() {
-                if ('speechSynthesis' in window) {
-                    this.state.speechSynthesis = window.speechSynthesis;
-                    const loadVoices = () => {
-                        const voices = this.state.speechSynthesis.getVoices();
-                        if (voices.length > 0) {
-                            this.state.arabicVoice = voices.find(v => v.lang.startsWith('ar'));
-                            console.log('Voix arabe trouvée:', this.state.arabicVoice);
-                        }
-                    };
-                    if (this.state.speechSynthesis.getVoices().length > 0) {
-                        loadVoices();
-                    } else {
-                        this.state.speechSynthesis.onvoiceschanged = loadVoices;
-                    }
-                } else {
-                    this.elements.audioStatus.className = 'audio-status error';
-                    this.elements.audioStatus.textContent = '⚠️ Synthèse vocale non supportée.';
-                }
-            },
+            playAudio(soundFile, buttonElement = null) {
+                if (!soundFile || !this.elements.audioPlayer) return;
 
-            enableAudio() {
-                if (!this.state.speechSynthesis) return;
-                
-                // "Débloque" l'audio en réponse à un clic utilisateur
-                const utterance = new SpeechSynthesisUtterance(' ');
-                utterance.volume = 0;
-                this.state.speechSynthesis.speak(utterance);
-                
-                this.state.audioEnabled = true;
-                this.elements.audioStatus.className = 'audio-status enabled';
-                this.elements.audioStatus.innerHTML = '✅ Audio activé !';
-            },
+                if (buttonElement) buttonElement.classList.add('playing');
+                this.elements.audioPlayer.src = soundFile;
+                this.elements.audioPlayer.play().catch(error => {
+                    console.error("Erreur de lecture audio :", error);
+                    if (buttonElement) buttonElement.classList.remove('playing');
+                });
 
-            playAudio(arabicText, buttonElement = null) {
-                if (!this.state.audioEnabled || !this.state.speechSynthesis) return;
-                
-                this.state.speechSynthesis.cancel();
-                
-                const utterance = new SpeechSynthesisUtterance(arabicText);
-                if (this.state.arabicVoice) {
-                    utterance.voice = this.state.arabicVoice;
-                }
-                utterance.lang = 'ar-SA';
-                utterance.rate = 0.8;
-
-                utterance.onstart = () => {
-                    if (buttonElement) buttonElement.classList.add('playing');
-                };
-                utterance.onend = () => {
+                this.elements.audioPlayer.onended = () => {
                     if (buttonElement) buttonElement.classList.remove('playing');
                 };
-                utterance.onerror = (e) => {
-                    if (buttonElement) buttonElement.classList.remove('playing');
-                    console.error("Erreur de synthèse vocale:", e.error);
-                };
-
-                this.state.speechSynthesis.speak(utterance);
             },
 
             showTab(tabName) {
@@ -530,7 +493,7 @@
 
             renderLessonDays() {
                 this.elements.lessonDaysContainer.innerHTML = this.state.days.map(day => `
-                    <div class="jour" data-ar="${day.ar}">
+                    <div class="jour">
                         <div class="arabe">${day.ar}</div>
                         <div class="fleche">→</div>
                         <div class="francais">${day.fr}</div>
