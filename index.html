@@ -393,314 +393,7 @@
 
     <!-- Élément audio unique pour jouer les sons -->
     <audio id="audio-player" preload="auto"></audio>
-
-    <script>
-        const days = [
-            { ar: 'الأحد', fr: 'dimanche' },
-            { ar: 'الإثنين', fr: 'lundi' },
-            { ar: 'الثلاثاء', fr: 'mardi' },
-            { ar: 'الأربعاء', fr: 'mercredi' },
-            { ar: 'الخميس', fr: 'jeudi' },
-            { ar: 'الجمعة', fr: 'vendredi' },
-            { ar: 'السبت', fr: 'samedi' }
-        ];
-
-        let currentQuiz = 0;
-        let quizScore = 0;
-        let quizAnswered = false;
-        let audioEnabled = false;
-        let memoryCards = [];
-        let flippedCards = [];
-        let memoryScore = 0;
-        let selectedArabic = null;
-        let selectedFrench = null;
-        let matchingScore = 0;
-        let matchingPairs = [];
-
-        // Gestion des onglets
-        document.querySelectorAll('.tab').forEach(tab => {
-            tab.addEventListener('click', function() {
-                const targetTab = this.getAttribute('data-tab');
-                showTab(targetTab);
-            });
-        });
-
-        function showTab(tabName) {
-            // Masquer tous les contenus
-            document.querySelectorAll('.content').forEach(content => {
-                content.classList.remove('active');
-            });
-            
-            // Masquer tous les onglets actifs
-            document.querySelectorAll('.tab').forEach(tab => {
-                tab.classList.remove('active');
-            });
-            
-            // Afficher le contenu sélectionné
-            document.getElementById(tabName).classList.add('active');
-            
-            // Activer l'onglet sélectionné
-            document.querySelector(`[data-tab="${tabName}"]`).classList.add('active');
-            
-            // Initialiser le contenu selon l'onglet
-            if (tabName === 'lesson') {
-                generateLessonContent();
-            } else if (tabName === 'quiz') {
-                startQuiz();
-            } else if (tabName === 'memory') {
-                generateMemoryGame();
-            } else if (tabName === 'dictation') {
-                startMatching();
-            }
-        }
-
-        // Gestion des boutons d'actions
-        document.addEventListener('click', function(e) {
-            if (e.target.hasAttribute('data-action')) {
-                const action = e.target.getAttribute('data-action');
-                
-                if (action === 'enable-audio') {
-                    enableAudio();
-                } else if (action === 'start-memory') {
-                    generateMemoryGame();
-                } else if (action === 'reset-matching') {
-                    resetMatching();
-                }
-            }
-        });
-
-        function enableAudio() {
-            audioEnabled = true;
-            const status = document.getElementById('audio-status');
-            status.textContent = 'Audio activé! Cliquez sur les boutons 🔊 pour entendre la prononciation.';
-            status.className = 'audio-status enabled';
-        }
-
-        function generateLessonContent() {
-            const container = document.getElementById('lesson-days-container');
-            container.innerHTML = '';
-            
-            days.forEach(day => {
-                const jourDiv = document.createElement('div');
-                jourDiv.className = 'jour';
-                jourDiv.innerHTML = `
-                    <div class="arabe">${day.ar}</div>
-                    <div class="fleche">→</div>
-                    <div class="francais">${day.fr}</div>
-                    <button class="audio-btn" onclick="playAudio('${day.ar}')">🔊</button>
-                `;
-                container.appendChild(jourDiv);
-            });
-        }
-
-        function playAudio(text) {
-            if (!audioEnabled) {
-                const status = document.getElementById('audio-status');
-                status.textContent = 'Veuillez d\'abord activer l\'audio en cliquant sur le bouton "Activer l\'audio".';
-                status.className = 'audio-status error';
-                return;
-            }
-
-            const utterance = new SpeechSynthesisUtterance(text);
-            utterance.lang = 'ar-SA';
-            utterance.rate = 0.8;
-            utterance.pitch = 1;
-
-            const button = event.target;
-            button.classList.add('playing');
-            
-            utterance.onend = function() {
-                button.classList.remove('playing');
-            };
-            
-            utterance.onerror = function() {
-                button.classList.remove('playing');
-            };
-
-            speechSynthesis.speak(utterance);
-        }
-
-        function startQuiz() {
-            currentQuiz = 0;
-            quizScore = 0;
-            quizAnswered = false;
-            showQuizQuestion();
-        }
-
-        function showQuizQuestion() {
-            const container = document.getElementById('quiz-container');
-            const currentDay = days[currentQuiz];
-            
-            // Créer les options (bonne réponse + 3 mauvaises)
-            const options = [currentDay.fr];
-            while (options.length < 4) {
-                const randomDay = days[Math.floor(Math.random() * days.length)];
-                if (!options.includes(randomDay.fr)) {
-                    options.push(randomDay.fr);
-                }
-            }
-            
-            // Mélanger les options
-            options.sort(() => Math.random() - 0.5);
-            
-            container.innerHTML = `
-                <div class="quiz-question">
-                    <h3>Question ${currentQuiz + 1}/7</h3>
-                    <div class="quiz-arabe">${currentDay.ar}</div>
-                    <p>Que signifie ce jour en français ?</p>
-                </div>
-                <div class="quiz-options">
-                    ${options.map(option => `
-                        <div class="quiz-option" onclick="selectAnswer('${option}', '${currentDay.fr}', this)">
-                            ${option}
-                        </div>
-                    `).join('')}
-                </div>
-                <div class="score">Score: ${quizScore}/7</div>
-            `;
-        }
-
-        function selectAnswer(selected, correct, element) {
-            if (quizAnswered) return;
-            
-            quizAnswered = true;
-            
-            // Colorer toutes les options
-            const options = document.querySelectorAll('.quiz-option');
-            options.forEach(option => {
-                if (option.textContent.trim() === correct) {
-                    option.classList.add('correct');
-                } else {
-                    option.classList.add('incorrect');
-                }
-            });
-            
-            // Mettre à jour le score
-            if (selected === correct) {
-                quizScore++;
-            }
-            
-            // Attendre un peu puis passer à la question suivante
-            setTimeout(() => {
-                nextQuestion();
-            }, 1500);
-        }
-
-        function nextQuestion() {
-            currentQuiz++;
-            quizAnswered = false;
-            
-            if (currentQuiz < days.length) {
-                showQuizQuestion();
-            } else {
-                // Fin du quiz
-                const container = document.getElementById('quiz-container');
-                container.innerHTML = `
-                    <div class="quiz-question">
-                        <h3>Quiz terminé!</h3>
-                        <div class="score">Score final: ${quizScore}/7</div>
-                        <button class="btn" onclick="startQuiz()">Recommencer</button>
-                    </div>
-                `;
-            }
-        }
-
-        function generateMemoryGame() {
-            memoryCards = [];
-            flippedCards = [];
-            memoryScore = 0;
-            document.getElementById('memory-score').textContent = '0';
-            
-            const gameContainer = document.getElementById('memory-game');
-            gameContainer.innerHTML = '';
-            
-            // Créer les paires de cartes
-            const cards = [];
-            days.forEach(day => {
-                cards.push({ type: 'arabic', value: day.ar, id: day.fr });
-                cards.push({ type: 'french', value: day.fr, id: day.fr });
-            });
-            
-            // Mélanger les cartes
-            cards.sort(() => Math.random() - 0.5);
-            
-            // Créer les éléments HTML
-            cards.forEach((card, index) => {
-                const cardElement = document.createElement('div');
-                cardElement.className = 'memory-card';
-                cardElement.dataset.type = card.type;
-                cardElement.dataset.value = card.value;
-                cardElement.dataset.id = card.id;
-                cardElement.dataset.index = index;
-                cardElement.textContent = '?';
-                cardElement.onclick = () => flipCard(cardElement);
-                gameContainer.appendChild(cardElement);
-                memoryCards.push(cardElement);
-            });
-        }
-
-        function flipCard(card) {
-            if (card.classList.contains('flipped') || card.classList.contains('matched') || flippedCards.length >= 2) {
-                return;
-            }
-            
-            card.classList.add('flipped');
-            card.textContent = card.dataset.value;
-            if (card.dataset.type === 'arabic') {
-                card.classList.add('arabic');
-            }
-            
-            flippedCards.push(card);
-            
-            if (flippedCards.length === 2) {
-                setTimeout(checkMemoryMatch, 1000);
-            }
-        }
-
-        function checkMemoryMatch() {
-            const [card1, card2] = flippedCards;
-            
-            if (card1.dataset.id === card2.dataset.id) {
-                card1.classList.add('matched');
-                card2.classList.add('matched');
-                memoryScore++;
-                document.getElementById('memory-score').textContent = memoryScore;
-                
-                if (memoryScore === 7) {
-                    setTimeout(() => alert('Félicitations! Vous avez trouvé toutes les paires!'), 300);
-                }
-            } else {
-                card1.classList.remove('flipped', 'arabic');
-                card2.classList.remove('flipped', 'arabic');
-                card1.textContent = '?';
-                card2.textContent = '?';
-            }
-            
-            flippedCards = [];
-        }
-
-        function startMatching() {
-            selectedArabic = null;
-            selectedFrench = null;
-            matchingScore = 0;
-            matchingPairs = [];
-            
-            const arabicContainer = document.getElementById('matching-arabic-words');
-            const frenchContainer = document.getElementById('matching-french-words');
-            
-            arabicContainer.innerHTML = '';
-            frenchContainer.innerHTML = '';
-            
-            // Mélanger les jours
-            const shuffledArabic = [...days].sort(() => Math.random() - 0.5);
-            const shuffledFrench = [...days].map(day => day.fr).sort(() => Math.random() - 0.5);
-            
-            shuffledArabic.forEach(day => {
-                const arabicWord = document.createElement('div');
-                arabicWord.className = 'matching-word matching-arabic';
-                arabicWord.textContent = day.ar;
-                arabicWord.dataset.day = day.fr;
-                arabicWord.onclick = () => selectWord(arabicWord, day.fr, 'arabic');
+icWord.onclick = () => selectWord(arabicWord, day.fr, 'arabic');
                 arabicContainer.appendChild(arabicWord);
             });
             
@@ -715,7 +408,7 @@
         }
         
         function selectWord(word, day, type) {
-            if (word.classList.contains('selected') || word.classList.contains('matched')) return;
+            if (word.classList.contains('selected') || word.classList.contains('correct')) return;
             
             // Remove selection from previous word of the same type
             if (type === 'arabic' && selectedArabic) {
@@ -740,16 +433,10 @@
             const frenchDay = selectedFrench.dataset.day;
             
             if (arabicDay === frenchDay) {
-                selectedArabic.classList.add('matched');
-                selectedFrench.classList.add('matched');
-                selectedArabic.classList.remove('selected');
-                selectedFrench.classList.remove('selected');
+                selectedArabic.classList.add('correct');
+                selectedFrench.classList.add('correct');
                 matchingPairs.push(arabicDay);
                 matchingScore++;
-                
-                if (matchingScore === days.length) {
-                    setTimeout(() => alert('Félicitations! Vous avez trouvé toutes les correspondances!'), 300);
-                }
             } else {
                 selectedArabic.classList.add('incorrect');
                 selectedFrench.classList.add('incorrect');
@@ -761,6 +448,36 @@
             
             selectedArabic = null;
             selectedFrench = null;
+            
+            if (matchingScore === days.length) {
+                alert('Félicitations! Vous avez trouvé toutes les correspondances!');
+            }
+        }
+        
+        function checkMatching() {
+            const arabicDay = selectedArabic.dataset.day;
+            const frenchDay = selectedFrench.dataset.day;
+            
+            if (arabicDay === frenchDay) {
+                selectedArabic.classList.add('correct');
+                selectedFrench.classList.add('correct');
+                matchingPairs.push(arabicDay);
+                matchingScore++;
+            } else {
+                selectedArabic.classList.add('incorrect');
+                selectedFrench.classList.add('incorrect');
+                setTimeout(() => {
+                    selectedArabic.classList.remove('incorrect', 'selected');
+                    selectedFrench.classList.remove('incorrect', 'selected');
+                }, 750);
+            }
+            
+            selectedArabic = null;
+            selectedFrench = null;
+            
+            if (matchingScore === days.length) {
+                alert('Félicitations! Vous avez trouvé toutes les correspondances!');
+            }
         }
         
         function resetMatching() {
