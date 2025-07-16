@@ -342,7 +342,6 @@
             
             <div class="controls">
                 <button class="btn" onclick="enableAudio()">🔊 Activer l'audio</button>
-                <button class="btn" onclick="testAudio()">🔊 Tester l'audio</button>
             </div>
             
             <div id="lesson-days-container">
@@ -388,25 +387,22 @@
         </div>
         
         <div class="note">
-            <strong>Note :</strong> Les voyelles courtes (diacritiques) sont affichées pour faciliter la lecture et la prononciation. L'audio utilise des fichiers MP3 pour une prononciation authentique.
+            <strong>Note :</strong> Les voyelles courtes (diacritiques) sont affichées pour faciliter la lecture et la prononciation. L'audio utilise la synthèse vocale de votre navigateur.
         </div>
     </div>
 
-    <!-- Élément audio pour jouer les sons -->
-    <audio id="audio-player" preload="auto"></audio>
-
     <script>
-        // Données des jours avec les noms des fichiers MP3
+        // Données des jours
         const days = [
-            { ar: 'الأحد', fr: 'Dimanche', audio: 'dimanche' },
-            { ar: 'الإثنين', fr: 'Lundi', audio: 'lundi' },
-            { ar: 'الثلاثاء', fr: 'Mardi', audio: 'mardi' },
-            { ar: 'الأربعاء', fr: 'Mercredi', audio: 'mercredi' },
-            { ar: 'الخميس', fr: 'Jeudi', audio: 'jeudi' },
-            { ar: 'الجمعة', fr: 'Vendredi', audio: 'vendredi' },
-            { ar: 'السبت', fr: 'Samedi', audio: 'samedi' }
+            { ar: 'الأحد', fr: 'Dimanche', trans: 'al-ahad' },
+            { ar: 'الإثنين', fr: 'Lundi', trans: 'al-ithnayn' },
+            { ar: 'الثلاثاء', fr: 'Mardi', trans: 'ath-thulatha' },
+            { ar: 'الأربعاء', fr: 'Mercredi', trans: 'al-arbi\'a' },
+            { ar: 'الخميس', fr: 'Jeudi', trans: 'al-khamis' },
+            { ar: 'الجمعة', fr: 'Vendredi', trans: 'al-jumu\'a' },
+            { ar: 'السبت', fr: 'Samedi', trans: 'as-sabt' }
         ];
-
+        
         let audioEnabled = false;
         let currentQuiz = 0;
         let quizScore = 0;
@@ -417,64 +413,26 @@
         let selectedFrench = null;
         let matchingScore = 0;
         let matchingPairs = [];
-
-        // Fonction pour activer l'audio
-        function enableAudio() {
-            const audioPlayer = document.getElementById('audio-player');
-            const testFile = 'sounds/dimanche.mp3';
-            audioPlayer.src = testFile;
-            audioPlayer.play().then(() => {
-                audioEnabled = true;
-                const audioStatus = document.getElementById('audio-status');
-                audioStatus.className = 'audio-status enabled';
-                audioStatus.textContent = 'Audio activé ! Cliquez sur 🔊 pour entendre la prononciation';
-            }).catch(error => {
-                console.error(`Erreur lors de l'activation de l'audio pour ${testFile}:`, error);
-                const audioStatus = document.getElementById('audio-status');
-                audioStatus.className = 'audio-status error';
-                audioStatus.textContent = `Erreur : Impossible d'activer l'audio pour ${testFile} (${error.message})`;
-            });
-        }
-
-        // Fonction pour jouer un fichier audio
-        function playAudio(audioFile) {
-            if (!audioEnabled) {
-                const audioStatus = document.getElementById('audio-status');
-                audioStatus.className = 'audio-status error';
-                audioStatus.textContent = 'Erreur : Veuillez activer l\'audio d\'abord en cliquant sur "Activer l\'audio"';
-                return;
-            }
-            const audioPlayer = document.getElementById('audio-player');
-            const audioPath = `sounds/${audioFile}.mp3`;
-            audioPlayer.src = audioPath;
-            audioPlayer.play().then(() => {
-                const audioStatus = document.getElementById('audio-status');
-                audioStatus.className = 'audio-status enabled';
-                audioStatus.textContent = `Lecture du son : ${audioFile}.mp3`;
-            }).catch(error => {
-                console.error(`Erreur lors de la lecture de ${audioPath}:`, error);
-                const audioStatus = document.getElementById('audio-status');
-                audioStatus.className = 'audio-status error';
-                audioStatus.textContent = `Erreur : Impossible de jouer ${audioPath} (${error.message})`;
-            });
-        }
-
-        // Fonction pour tester l'audio
-        function testAudio() {
-            playAudio('dimanche');
-        }
-
+        
         // Fonction pour changer d'onglet
         function showTab(tabName) {
+            // Masquer tous les contenus
             document.querySelectorAll('.content').forEach(content => {
                 content.classList.remove('active');
             });
+            
+            // Désactiver tous les onglets
             document.querySelectorAll('.tab').forEach(tab => {
                 tab.classList.remove('active');
             });
+            
+            // Afficher le contenu sélectionné
             document.getElementById(tabName).classList.add('active');
-            document.querySelector(`.tab[onclick="showTab('${tabName}')"]`).classList.add('active');
-
+            
+            // Activer l'onglet sélectionné
+            event.target.classList.add('active');
+            
+            // Initialiser le contenu selon l'onglet
             if (tabName === 'lesson') {
                 generateLessonContent();
             } else if (tabName === 'quiz') {
@@ -485,11 +443,33 @@
                 startMatching();
             }
         }
-
+        
+        // Fonction pour activer l'audio
+        function enableAudio() {
+            audioEnabled = true;
+            const audioStatus = document.getElementById('audio-status');
+            audioStatus.className = 'audio-status enabled';
+            audioStatus.textContent = 'Audio activé! Cliquez sur 🔊 pour entendre la prononciation';
+        }
+        
+        // Fonction pour prononcer un mot
+        function speakText(text, lang = 'ar') {
+            if (!audioEnabled) return;
+            
+            if ('speechSynthesis' in window) {
+                const utterance = new SpeechSynthesisUtterance(text);
+                utterance.lang = lang === 'ar' ? 'ar-SA' : 'fr-FR';
+                utterance.rate = 0.7;
+                utterance.pitch = 1;
+                speechSynthesis.speak(utterance);
+            }
+        }
+        
         // Générer le contenu de la leçon
         function generateLessonContent() {
             const container = document.getElementById('lesson-days-container');
             container.innerHTML = '';
+            
             days.forEach(day => {
                 const dayElement = document.createElement('div');
                 dayElement.className = 'jour';
@@ -497,38 +477,41 @@
                     <div class="arabe">${day.ar}</div>
                     <div class="fleche">➡</div>
                     <div class="francais">${day.fr}</div>
-                    <button class="audio-btn" onclick="playAudio('${day.audio}')">🔊</button>
+                    <button class="audio-btn" onclick="speakText('${day.ar}', 'ar')">🔊</button>
                 `;
                 container.appendChild(dayElement);
             });
         }
-
+        
         // Fonction pour démarrer le quiz
         function startQuiz() {
             currentQuiz = 0;
             quizScore = 0;
             showQuizQuestion();
         }
-
+        
         function showQuizQuestion() {
             const container = document.getElementById('quiz-container');
+            
             if (currentQuiz >= days.length) {
                 container.innerHTML = `
-                    <div class="score">Quiz terminé ! Score : ${quizScore}/${days.length}</div>
+                    <div class="score">Quiz terminé! Score: ${quizScore}/${days.length}</div>
                     <div class="controls">
                         <button class="btn" onclick="startQuiz()">Recommencer</button>
                     </div>
                 `;
                 return;
             }
+            
             const currentDay = days[currentQuiz];
             const wrongOptions = days.filter(d => d !== currentDay).slice(0, 3);
             const allOptions = [currentDay, ...wrongOptions].sort(() => Math.random() - 0.5);
+            
             container.innerHTML = `
                 <div class="quiz-question">
                     <h3>Question ${currentQuiz + 1}/${days.length}</h3>
                     <div class="quiz-arabe">${currentDay.ar}</div>
-                    <p>Comment dit-on ce jour en français ?</p>
+                    <p>Comment dit-on ce jour en français?</p>
                     <div class="quiz-options">
                         ${allOptions.map(option => `
                             <div class="quiz-option" onclick="checkAnswer('${option.fr}', '${currentDay.fr}', this)">
@@ -537,45 +520,55 @@
                         `).join('')}
                     </div>
                 </div>
-                <div class="score">Score : ${quizScore}/${currentQuiz}</div>
+                <div class="score">Score: ${quizScore}/${currentQuiz}</div>
             `;
         }
-
+        
         function checkAnswer(selected, correct, element) {
             if (selected === correct) {
                 element.classList.add('correct');
                 quizScore++;
-                playAudio(days.find(day => day.fr === correct).audio);
+                speakText(correct, 'fr');
             } else {
                 element.classList.add('incorrect');
+                // Montrer la bonne réponse
                 document.querySelectorAll('.quiz-option').forEach(opt => {
                     if (opt.textContent.trim() === correct) {
                         opt.classList.add('correct');
                     }
                 });
             }
+            
+            // Désactiver tous les boutons
             document.querySelectorAll('.quiz-option').forEach(opt => {
                 opt.style.pointerEvents = 'none';
             });
+            
             setTimeout(() => {
                 currentQuiz++;
                 showQuizQuestion();
             }, 1500);
         }
-
+        
         // Jeu de mémoire
         function startMemoryGame() {
             matchedPairs = 0;
             flippedCards = [];
             document.getElementById('memory-score').textContent = '0';
+            
             const gameContainer = document.getElementById('memory-game');
             gameContainer.innerHTML = '';
+            
+            // Créer les cartes (arabe et français)
             const cards = [];
             days.forEach(day => {
                 cards.push({ content: day.ar, type: 'arabic', day: day.fr });
                 cards.push({ content: day.fr, type: 'french', day: day.fr });
             });
+            
+            // Mélanger les cartes
             cards.sort(() => Math.random() - 0.5);
+            
             cards.forEach((card, index) => {
                 const cardElement = document.createElement('div');
                 cardElement.className = `memory-card ${card.type === 'arabic' ? 'arabic' : ''}`;
@@ -587,28 +580,32 @@
                 gameContainer.appendChild(cardElement);
             });
         }
-
+        
         function flipCard(cardElement, content) {
             if (cardElement.classList.contains('flipped') || cardElement.classList.contains('matched') || flippedCards.length >= 2) {
                 return;
             }
+            
             cardElement.classList.add('flipped');
             cardElement.textContent = content;
             flippedCards.push(cardElement);
+            
             if (flippedCards.length === 2) {
                 setTimeout(checkMemoryMatch, 1000);
             }
         }
-
+        
         function checkMemoryMatch() {
             const [card1, card2] = flippedCards;
+            
             if (card1.dataset.day === card2.dataset.day && card1.dataset.type !== card2.dataset.type) {
                 card1.classList.add('matched');
                 card2.classList.add('matched');
                 matchedPairs++;
                 document.getElementById('memory-score').textContent = matchedPairs;
+                
                 if (matchedPairs === days.length) {
-                    setTimeout(() => alert('Félicitations ! Vous avez trouvé toutes les paires !'), 500);
+                    setTimeout(() => alert('Félicitations! Vous avez trouvé toutes les paires!'), 500);
                 }
             } else {
                 card1.classList.remove('flipped');
@@ -616,21 +613,27 @@
                 card1.textContent = '?';
                 card2.textContent = '?';
             }
+            
             flippedCards = [];
         }
-
+        
         // Jeu d'associations
         function startMatching() {
             matchingScore = 0;
             matchingPairs = [];
             selectedArabic = null;
             selectedFrench = null;
+            
             const arabicContainer = document.getElementById('matching-arabic-words');
             const frenchContainer = document.getElementById('matching-french-words');
+            
             arabicContainer.innerHTML = '';
             frenchContainer.innerHTML = '';
+            
+            // Mélanger les tableaux
             const shuffledArabic = [...days].sort(() => Math.random() - 0.5);
             const shuffledFrench = [...days].map(d => d.fr).sort(() => Math.random() - 0.5);
+            
             shuffledArabic.forEach(day => {
                 const arabicWord = document.createElement('div');
                 arabicWord.className = 'matching-word matching-arabic';
@@ -639,6 +642,7 @@
                 arabicWord.onclick = () => selectWord(arabicWord, day.fr, 'arabic');
                 arabicContainer.appendChild(arabicWord);
             });
+            
             shuffledFrench.forEach(french => {
                 const frenchWord = document.createElement('div');
                 frenchWord.className = 'matching-word';
@@ -648,25 +652,32 @@
                 frenchContainer.appendChild(frenchWord);
             });
         }
-
+        
         function selectWord(word, day, type) {
             if (word.classList.contains('selected') || word.classList.contains('correct')) return;
+            
+            // Retirer la sélection du mot précédent du même type
             if (type === 'arabic' && selectedArabic) {
                 selectedArabic.classList.remove('selected');
             } else if (type === 'french' && selectedFrench) {
                 selectedFrench.classList.remove('selected');
             }
+            
             word.classList.add('selected');
+            
             if (type === 'arabic') selectedArabic = word;
             else selectedFrench = word;
+            
+            // Vérifier s'il y a une correspondance
             if (selectedArabic && selectedFrench) {
                 checkMatching();
             }
         }
-
+        
         function checkMatching() {
             const arabicDay = selectedArabic.dataset.day;
             const frenchDay = selectedFrench.dataset.day;
+            
             if (arabicDay === frenchDay) {
                 selectedArabic.classList.remove('selected');
                 selectedFrench.classList.remove('selected');
@@ -674,8 +685,9 @@
                 selectedFrench.classList.add('correct');
                 matchingPairs.push(arabicDay);
                 matchingScore++;
+                
                 if (matchingScore === days.length) {
-                    setTimeout(() => alert('Félicitations ! Vous avez trouvé toutes les correspondances !'), 500);
+                    setTimeout(() => alert('Félicitations! Vous avez trouvé toutes les correspondances!'), 500);
                 }
             } else {
                 selectedArabic.classList.add('incorrect');
@@ -685,14 +697,15 @@
                     selectedFrench.classList.remove('incorrect', 'selected');
                 }, 750);
             }
+            
             selectedArabic = null;
             selectedFrench = null;
         }
-
+        
         function resetMatching() {
             startMatching();
         }
-
+        
         // Initialiser la page
         document.addEventListener('DOMContentLoaded', function() {
             generateLessonContent();
