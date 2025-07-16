@@ -394,17 +394,6 @@
             </div>
             
             <div id="lesson-days-container">
-<body>
-    <div class="container">
-        <h1>أيام الأسبوع - Les jours de la semaine</h1>
-        
-        <div class="tabs">
-            <button class="tab active" data-tab="lesson">📚 Leçon</button>
-            <button class="tab" data-tab="quiz">🎯 Quiz</button>
-            <button class="tab" data-tab="memory">🧩 Jeu de mémoire</button>
-            <button class="tab" data-tab="dictation">🔗 Associations</button>
-        </div>
-        
         <!-- Leçon -->
         <div id="lesson" class="content active">
             <div class="info-box">
@@ -415,7 +404,9 @@
                 Cliquez sur "Activer l'audio" pour entendre la prononciation
             </div>
             
-            <div class="controls">
+            
+                
+            
                 <button class="btn" data-action="enable-audio">🔊 Activer l'audio</button>
             </div>
             
@@ -447,7 +438,7 @@
                 <div class="matching-game">
                     <div class="matching-column">
                         <h4>Arabe</h4>
-                        <div id="matching-arabic-words"></div>
+                        <div id="arabic-words"></div>
                     </div>
                     <div class="matching-column">
                         <h4>Français</h4>
@@ -466,20 +457,19 @@
         </div>
     </div>
 
-    <!-- Élément audio unique pour jouer les sons -->
-    <audio id="audio-player" preload="auto"></audio>
+    
     <script>
         const app = {
             state: {
                 days: [
-                    // IMPORTANT: Assurez-vous que ces fichiers mp3 existent dans un dossier "sounds"
-                    { ar: 'الأَحَدُ', fr: 'Dimanche', sound: 'sounds/dimanche.mp3' },
-                    { ar: 'الإِثْنَيْنِ', fr: 'Lundi', sound: 'sounds/lundi.mp3' },
-                    { ar: 'الثُّلاثاءُ', fr: 'Mardi', sound: 'sounds/mardi.mp3' },
-                    { ar: 'الأَرْبِعاءُ', fr: 'Mercredi', sound: 'sounds/mercredi.mp3' },
-                    { ar: 'الخَمِيسُ', fr: 'Jeudi', sound: 'sounds/jeudi.mp3' },
-                    { ar: 'الجُمُعَةُ', fr: 'Vendredi', sound: 'sounds/vendredi.mp3' },
-                    { ar: 'السَّبْتُ', fr: 'Samedi', sound: 'sounds/samedi.mp3' }
+                    
+                    { ar: 'الأَحَدُ', fr: 'Dimanche', clean: 'الأحد' },
+                    { ar: 'الإِثْنَيْنِ', fr: 'Lundi', clean: 'الإثنين' },
+                    { ar: 'الثُّلاثاءُ', fr: 'Mardi', clean: 'الثلاثاء' },
+                    { ar: 'الأَرْبِعاءُ', fr: 'Mercredi', clean: 'الأربعاء' },
+                    { ar: 'الخَمِيسُ', fr: 'Jeudi', clean: 'الخميس' },
+                    { ar: 'الجُمُعَةُ', fr: 'Vendredi', clean: 'الجمعة' },
+                    { ar: 'السَّبْتُ', fr: 'Samedi', clean: 'السبت' }
                 ],
                 quiz: { currentIndex: 0, score: 0 },
                 memory: { cards: [], flippedCards: [], score: 0, lockBoard: false },
@@ -489,7 +479,6 @@
             elements: {},
 
             init() {
-                this.cacheElements();
                 this.bindEvents();
                 this.renderLessonDays();
             },
@@ -498,14 +487,12 @@
                 this.elements.tabs = document.querySelectorAll('.tab');
                 this.elements.contents = document.querySelectorAll('.content');
                 this.elements.audioStatus = document.getElementById('audio-status');
-                this.elements.lessonDaysContainer = document.getElementById('lesson-days-container');
-                this.elements.audioPlayer = document.getElementById('audio-player');
                 this.elements.quizContainer = document.getElementById('quiz-container');
                 this.elements.memoryScore = document.getElementById('memory-score');
                 this.elements.memoryGame = document.getElementById('memory-game');
-                this.elements.arabicWords = document.getElementById('matching-arabic-words');
+                this.elements.arabicWords = document.getElementById('arabic-words');
                 this.elements.frenchWords = document.getElementById('matching-french-words');
-                this.elements.matchingResult = document.getElementById('matching-result');
+                
             },
 
             bindEvents() {
@@ -513,28 +500,12 @@
                     tab.addEventListener('click', () => this.showTab(tab.dataset.tab));
                 });
 
-                document.body.addEventListener('click', (e) => {
-                    const action = e.target.dataset.action;
-                    // Le bouton "enable-audio" change simplement le message
-                    if (action === 'enable-audio') {
-                        this.elements.audioStatus.className = 'audio-status enabled';
-                        this.elements.audioStatus.innerHTML = '✅ Audio activé !';
-                    } else if (action && typeof this[action] === 'function') {
-                        e.preventDefault();
-                        this[action]();
-                    }
-                });
-
-                this.elements.lessonDaysContainer.addEventListener('click', (e) => {
-                    const dayElement = e.target.closest('.jour');
-                    if (dayElement) {
-                        // Trouver l'index de l'élément cliqué pour obtenir le bon fichier son
-                        const dayIndex = Array.from(this.elements.lessonDaysContainer.children).indexOf(dayElement);
-                        const soundFile = this.state.days[dayIndex].sound;
-                        const button = dayElement.querySelector('.audio-btn');
-                        this.playAudio(soundFile, button);
-                    }
-                });
+               
+                
+               
+                
+                
+                
             },
 
             playAudio(soundFile, buttonElement = null) {
@@ -565,7 +536,7 @@
             },
 
             renderLessonDays() {
-                this.elements.lessonDaysContainer.innerHTML = this.state.days.map(day => `
+                document.getElementById('lesson-days-container').innerHTML = this.state.days.map(day => `
                     <div class="jour">
                         <div class="arabe">${day.ar}</div>
                         <div class="fleche">→</div>
