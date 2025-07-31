@@ -103,6 +103,9 @@ const QuizTab = () => {
           <Badge variant="outline" className="text-red-600 border-red-600">
             ❌ Incorrect: {score.incorrect}
           </Badge>
+          <Badge variant="outline" className="text-blue-600 border-blue-600">
+            📊 Questions: {totalQuestions}/7
+          </Badge>
         </div>
       </CardHeader>
 
