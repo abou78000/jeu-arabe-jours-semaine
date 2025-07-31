@@ -13,6 +13,8 @@ const QuizTab = () => {
   const [selectedAnswer, setSelectedAnswer] = useState(null);
   const [showResult, setShowResult] = useState(false);
   const [gameComplete, setGameComplete] = useState(false);
+  const [questionsAsked, setQuestionsAsked] = useState([]);
+  const [totalQuestions, setTotalQuestions] = useState(0);
 
   // Générer une nouvelle question
   const generateQuestion = () => {
