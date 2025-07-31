@@ -80,6 +80,8 @@ const QuizTab = () => {
   const resetGame = () => {
     setScore({ correct: 0, incorrect: 0 });
     setGameComplete(false);
+    setQuestionsAsked([]);
+    setTotalQuestions(0);
     generateQuestion();
   };
 
