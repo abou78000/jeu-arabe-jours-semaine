@@ -114,10 +114,13 @@ const QuizTab = () => {
           <CardContent className="p-6 text-center">
             <Trophy className="w-16 h-16 text-yellow-500 mx-auto mb-4" />
             <h3 className="text-2xl font-bold text-yellow-700 mb-2">
-              🎉 Félicitations ! 🎉
+              🎉 Quiz terminé ! 🎉
             </h3>
             <p className="text-yellow-600">
-              Score parfait ! Tu maîtrises les jours de la semaine en arabe !
+              {score.correct === 7 
+                ? "Score parfait ! Tu maîtrises les jours de la semaine en arabe !"
+                : `Bien joué ! Score final : ${score.correct}/7 correct, ${score.incorrect} erreurs`
+              }
             </p>
           </CardContent>
         </Card>
