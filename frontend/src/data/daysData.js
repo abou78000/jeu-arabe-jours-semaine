@@ -16,7 +16,7 @@ export const daysData = [
     id: 3,
     arabic: "الثُّلاثَاء",
     french: "Mardi",
-    audioUrl: null // En attente du fichier audio
+    audioUrl: "https://customer-assets.emergentagent.com/job_learn-arabic-days/artifacts/lvvmy320_mardi.mp3"
   },
   {
     id: 4,
@@ -34,7 +34,7 @@ export const daysData = [
     id: 6,
     arabic: "الجُمُعَة",
     french: "Vendredi",
-    audioUrl: null // En attente du fichier audio
+    audioUrl: "https://customer-assets.emergentagent.com/job_learn-arabic-days/artifacts/x4jg3wdo_vendredi.mp3"
   },
   {
     id: 7,
