@@ -18,8 +18,22 @@ const QuizTab = () => {
 
   // Générer une nouvelle question
   const generateQuestion = () => {
-    const randomDay = daysData[Math.floor(Math.random() * daysData.length)];
+    // Vérifier si toutes les questions ont été posées
+    if (questionsAsked.length >= 7 || gameComplete) {
+      return;
+    }
+
+    // Trouver les jours non encore demandés
+    const availableDays = daysData.filter(day => !questionsAsked.includes(day.id));
+    
+    if (availableDays.length === 0) {
+      setGameComplete(true);
+      return;
+    }
+
+    const randomDay = availableDays[Math.floor(Math.random() * availableDays.length)];
     setCurrentDay(randomDay);
+    setQuestionsAsked(prev => [...prev, randomDay.id]);
 
     // Créer 3 options (1 correcte + 2 incorrectes)
     const correctAnswer = randomDay.french;
@@ -35,6 +49,7 @@ const QuizTab = () => {
     setOptions(allOptions);
     setSelectedAnswer(null);
     setShowResult(false);
+    setTotalQuestions(prev => prev + 1);
   };
 
   // Gérer la réponse
