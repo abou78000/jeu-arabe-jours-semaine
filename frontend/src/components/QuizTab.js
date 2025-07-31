@@ -126,7 +126,7 @@ const QuizTab = () => {
         </Card>
       )}
 
-      {currentDay && (
+      {currentDay && !gameComplete && (
         <Card className="border-2 border-purple-200">
           <CardContent className="p-8 text-center">
             {/* Question */}
