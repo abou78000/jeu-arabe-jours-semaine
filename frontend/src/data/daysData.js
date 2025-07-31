@@ -4,43 +4,43 @@ export const daysData = [
     id: 1,
     arabic: "الأَحَد",
     french: "Dimanche",
-    audioUrl: "https://customer-assets.emergentagent.com/job_learn-arabic-days/artifacts/pg71kylx_dimanche.mp3"
+    audioUrl: "/audio/dimanche.mp3"
   },
   {
     id: 2,
     arabic: "الِاثْنَيْن",
     french: "Lundi", 
-    audioUrl: "https://customer-assets.emergentagent.com/job_learn-arabic-days/artifacts/ij77ggqs_lundi.mp3"
+    audioUrl: "/audio/lundi.mp3"
   },
   {
     id: 3,
     arabic: "الثُّلاثَاء",
     french: "Mardi",
-    audioUrl: "https://customer-assets.emergentagent.com/job_learn-arabic-days/artifacts/lvvmy320_mardi.mp3"
+    audioUrl: "/audio/mardi.mp3"
   },
   {
     id: 4,
     arabic: "الأَرْبِعَاء",
     french: "Mercredi",
-    audioUrl: "https://customer-assets.emergentagent.com/job_learn-arabic-days/artifacts/lhkkuz77_mercredi.mp3"
+    audioUrl: "/audio/mercredi.mp3"
   },
   {
     id: 5,
     arabic: "الخَمِيس",
     french: "Jeudi",
-    audioUrl: "https://customer-assets.emergentagent.com/job_learn-arabic-days/artifacts/1vwt7m0y_jeudi.mp3"
+    audioUrl: "/audio/jeudi.mp3"
   },
   {
     id: 6,
     arabic: "الجُمُعَة",
     french: "Vendredi",
-    audioUrl: "https://customer-assets.emergentagent.com/job_learn-arabic-days/artifacts/x4jg3wdo_vendredi.mp3"
+    audioUrl: "/audio/vendredi.mp3"
   },
   {
     id: 7,
     arabic: "السَّبْت",
     french: "Samedi",
-    audioUrl: "https://customer-assets.emergentagent.com/job_learn-arabic-days/artifacts/imagp50m_samedi.mp3"
+    audioUrl: "/audio/samedi.mp3"
   }
 ];
 
