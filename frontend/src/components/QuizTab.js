@@ -59,13 +59,17 @@ const QuizTab = () => {
 
     if (answer === currentDay.french) {
       setScore(prev => ({ ...prev, correct: prev.correct + 1 }));
-      
-      // Vérifier si le score est parfait (7/7)
-      if (score.correct + 1 === 7 && score.incorrect === 0) {
-        setGameComplete(true);
-      }
     } else {
       setScore(prev => ({ ...prev, incorrect: prev.incorrect + 1 }));
+    }
+
+    // Vérifier si le jeu est terminé
+    const newCorrect = answer === currentDay.french ? score.correct + 1 : score.correct;
+    const newIncorrect = answer === currentDay.french ? score.incorrect : score.incorrect + 1;
+    
+    if (questionsAsked.length >= 7 || (newCorrect + newIncorrect >= 7)) {
+      setGameComplete(true);
+      return;
     }
 
     // Générer nouvelle question après 2 secondes
